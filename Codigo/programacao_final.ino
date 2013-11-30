@@ -2,21 +2,21 @@
 #include <LiquidCrystal.h>                                          // Classe LCD
 
 int estado,velocidade;                                             // variaveis de controle
-int pot=A0;                                                        // define potenciometro elo 1
-int pot2=A1;                                                       // define potenciometro elo 2
+int pot=A3;                                                        // define potenciometro elo 2
+int pot2=A0;                                                       // define potenciometro elo 1
 
-int i=0,m=0,n=0,x=0,z=0,q=0,w=0,y=0,f=0,r=0,t=0,p=0; s=120               // variaveis de controle
+int i=0,m=0,n=0,x=0,z=0,q=0,w=0,y=0,f=0,r=0,t=15,p=0,s=120,c=0,d=0;               // variaveis de controle
 Servo servo,servo2,servo3,servo4;                                         // Instancia da classe Servo
 int Leitura[10],Leitura2[10],Leitura3[10];                         // variaveis pertencentes ao filtro
 int Total=0,Total2=0,Total3=0;                                     // variaveis pertencentes ao filtro
 int Media=0,Media2=0,Media3=0;                                     // variaveis de media para filtro (remocao de ruidos na leitura dos potenciometros)
 int time=0;                                                        // tempo (velocidade) de atualizacao dos dados, ou seja, velocidade de movimentacao dos servos
-int btn_cremalheira_cima=18;                                       // botao para subir cremalheira
-int btn_cremalheira_baixo=19;                                      // botao para descer cremalheira
+int btn_cremalheira_cima=19;                                       // botao para subir cremalheira
+int btn_cremalheira_baixo=18;                                      // botao para descer cremalheira
 int val_crem_cima=0,val_crem_baixo=0,ct1_garra=0,ct2_garra=0, val_controle=0;      // declara variaveis de contagem
 int botao_garra1=8;
-int botao_garra2=A2;
-int botao_controle=A3;                                             // saida da garra porta A3
+int botao_garra2=16;
+//int botao_controle=A3;                                             // saida da garra porta A3
 //Linhas abaixo comentadas pois no lugar do motor dc foi inserido um servomotor (servo 4)
 //int saida_garra1=A3;
 //int saida_garra2=10;
@@ -28,8 +28,10 @@ void setup() {
 
     lcd.begin(16, 2);                                            // Parametro quantidade de colunas x linhas LCD
     servo.attach(7);                                             // Define o servo elo 1
-    servo2.attach(9);                                            // Define servo elo 2
+     servo2.attach(9);                                            // Define servo elo 2
+   // digitalWrite(9,LOW);                                        // Caso necessite desabilitar servo 9. Para isso, antes comente a linha "servo2.attach(9);"
     servo3.attach(13);                                           // Define servo cremalheira
+  //  digitalWrite(13,LOW);
     servo4.attach(10);                                           // Define servo garra
     
     Serial.begin(9600);                                          // Inicializa a Porta Serial com Baud Rate 9600 (standart)
@@ -63,6 +65,8 @@ void setup() {
 
     }
      p=0;
+
+                
 }
 
 void loop() {                                                                     // Inicio da linha de execucao do programa
@@ -81,31 +85,29 @@ void loop() {                                                                   
      
    ct1_garra = digitalRead(botao_garra1);                                       // Leitura botao 1 da garra
    ct2_garra = digitalRead(botao_garra2);                                       // Leitura botao 2 da garra
-       
-   if ((ct1_garra==LOW)&&(ct2_garra==HIGH)){                                    // Aciona motor 1 da garra e caso botao 2 estiver acionado ignora
-        val_garra="A";                                                          // Indicacao estado garra ABERTA
-        digitalWrite(saida_garra1,HIGH);
-      }else{
-        digitalWrite(saida_garra1,LOW);
-      }
-     
-   if ((ct2_garra==HIGH)&&(ct1_garra==LOW)){                                    // Aciona motor 2 da garra e caso botao 1 estiver acionado ignora
-        val_garra="F";                                                          // Indicacao estado garra FECHADA
-        digitalWrite(saida_garra2,HIGH);
-      }else{
-        digitalWrite(saida_garra2,LOW); 
-      }
-      
-   if (((ct2_garra==HIGH)&&(ct1_garra==HIGH))){                                 // Caso os dois botoes da garra forem acionados NADA faz
+   
+      if (((ct2_garra==HIGH)&&(ct1_garra==HIGH))){                                 // Caso os dois botoes da garra forem acionados NADA faz
         val_garra="N";
       } 
       
      if ((ct2_garra==LOW)&&(ct1_garra==LOW)){                                   // Caso os dois botoes da garra NAO forem acionados sao desligados os motores
         val_garra="N";
-        digitalWrite(saida_garra1,LOW); 
-        digitalWrite(saida_garra2,LOW); 
+     //   digitalWrite(saida_garra1,LOW); 
+    //    digitalWrite(saida_garra2,LOW); 
       }   
       
+  
+   if ((ct1_garra==LOW)&&(ct2_garra==HIGH)){                                    // Aciona motor 1 da garra e caso botao 2 estiver acionado ignora
+        val_garra="A";                                                          // Indicacao estado garra ABERTA
+      s=s+1;
+      }
+     
+   if ((ct2_garra==LOW)&&(ct1_garra==HIGH)){                                    // Aciona motor 2 da garra e caso botao 1 estiver acionado ignora
+        val_garra="F";                                                          // Indicacao estado garra FECHADA
+      s=s-1;
+      }
+      
+
    i= servo.read();                                                            //Leitura posicao do Servo elo 1
         
         if(i<x){                                                               // Caso a posicao do servo seja menor do que a indicada no potenciometro do elo 1 
@@ -130,6 +132,14 @@ void loop() {                                                                   
         m=m+1; 
         servo3.write(m);
         delay(time);
+        }  
+        
+   c= servo4.read();                                                          //Leitura posicao do Servo Garra
+        
+        if(c<s){      
+        c=c+1; 
+        servo4.write(c);
+        delay(100);
         }  
 
    z= servo.read();                                                          //Leitura posicao do Servo elo 1, a fim de armazenar a nova posicao em outra variavel
@@ -164,11 +174,20 @@ void loop() {                                                                   
 
         }
         
+   d= servo4.read();
+
+        if(d>s){       
+        
+        d=d-1;     
+        servo4.write(d);
+        delay(100);
+        }
+        
         if ((i!=x)||(y!=q)||(m!=t)){            // Atualiza linha 1 do LCD
            LcdClearLine(1);                     // Executa funcao de limpeza da linha 1
            exibedisplay();                      // Exibe os dados atuais
         }
-        
+      exibe();
 } // fim do loop
     
 void LcdClearLine(int r) {                      // Declara Funcao com retorno vazio
@@ -197,7 +216,6 @@ void exibedisplay(){                            // Funcao responsavel por exibir
      lcd.print(t);                              // Exibe posicao do ELO 3 (cremalheira)    
             lcd.setCursor(13, 1);
      lcd.print(val_garra);                      // Exibe posicao da GARRA
-
 }
  
 void exibe(){                                  // Exibe os valores na porta Serial do computador (somente necessaria a nivel de teste e calibragem)
@@ -218,6 +236,15 @@ void exibe(){                                  // Exibe os valores na porta Seri
      Serial.print("\t");
      Serial.print("w= ");
      Serial.print(w);
+     Serial.print("\t");
+     Serial.print("s= ");
+     Serial.print(s);
+          Serial.print("\t");
+     Serial.print("val_garra= ");
+     Serial.print(val_garra);
+          Serial.print("\t");
+     Serial.print("servo= ");
+          Serial.print(d);
      Serial.print("\n");     
 }
 
@@ -230,7 +257,7 @@ void filtro_servo1(){                          //Filtro Potenciomentro
       f = 0;                                  // Zero vetor
       Media = Total / 10;                     // Calcula a media
       x= map(Media,0,1023,0,179);             // Mapeia o intervalo de valores de 0 a 180 (graus)
-    }
+  }
 }
 
 void filtro_servo2(){
@@ -245,6 +272,3 @@ void filtro_servo2(){
       }
 }
     
-      
-     
-
